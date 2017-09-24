@@ -4,7 +4,8 @@
   "description": "api for lytit webapp",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,15 @@
   "bugs": {
     "url": "https://github.com/andresn93/lystit-api/issues"
   },
-  "homepage": "https://github.com/andresn93/lystit-api#readme"
+  "engines": {
+    "node": "8.4.0",
+    "npm": "5.4.2"
+  },
+  "homepage": "https://github.com/andresn93/lystit-api#readme",
+  "dependencies": {
+    "body-parser": "1.18.2",
+    "express": "4.15.4",
+    "mongodb": "2.2.31",
+    "mongoose": "4.11.12"
+  }
 }
