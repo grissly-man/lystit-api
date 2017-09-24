@@ -5,7 +5,7 @@ var bodyParser = require('body-parser')
 var mongoose = require('mongoose')
 var mongodb = require('mongodb')
 
-var MongoClient = require('mongodb').MongoClient;
+// var MongoClient = require('mongodb').MongoClient;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 // parse application/json
@@ -42,9 +42,7 @@ app.listen(process.env.PORT || 5000, function(err) {
 // });
 
 
-//CONNECT W/ MONGOCLIENT
-
-var URL = 'mongodb://heroku_nj1w7rxq:h4qsvh54938k7d6c8i6iim47dk@ds147884.mlab.com:47884/heroku_nj1w7rxq';
+//CONNECT W/ MONGOOSE OR MONGOCLIENT
 
 // MongoClient.connect(URL, function(err, db) {
 //   if(!err) {
@@ -52,10 +50,10 @@ var URL = 'mongodb://heroku_nj1w7rxq:h4qsvh54938k7d6c8i6iim47dk@ds147884.mlab.co
 //   }
 // });
 
-mongoose.connect(URL, function(error){
+mongoose.connect(process.env.MONGODB_URI, function(error){
  useMongoClient: true; 
 	if (error) console.error(error);
-	else console.log('mongo connected');
+	else console.log('mongoose connected');
 });
 
 //=====================================================
