@@ -1,0 +1,19 @@
+{
+  "name": "lystit-back",
+  "version": "1.0.0",
+  "description": "api for lytit webapp",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andresn93/lystit-api.git"
+  },
+  "author": "Andres",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/andresn93/lystit-api/issues"
+  },
+  "homepage": "https://github.com/andresn93/lystit-api#readme"
+}
