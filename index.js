@@ -1,9 +1,9 @@
-const express = require('express')
-const app = express()
-const port = 3000
-var bodyParser = require('body-parser')
-var mongoose = require('mongoose')
-var mongodb = require('mongodb')
+const express = require('express');
+const app = express();
+var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
+
+// var mongodb = require('mongodb');
 
 // var MongoClient = require('mongodb').MongoClient;
 
@@ -13,12 +13,14 @@ app.use(bodyParser.json());
  //define folder that will be used for static assets
 app.use(express.static('/public'));
 
-
 //CORS 
 
 app.use(function(req, res, next){
-	res.header("Access-Control-Allow-Origin", "*");
+	console.log(req.url);
+	res.header("Access-Control-Allow-Origin", req.headers.origin);
+	res.header("Access-Control-Allow-Credentials", true);
 	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+	res.header("Access-Control-Allow-Methods", "POST GET OPTIONS HEAD");
 	next();
 });
 
@@ -27,9 +29,9 @@ app.use(function(req, res, next){
 
 app.listen(process.env.PORT || 5000, function(err) {
   if (err) {
-    return console.log('something bad happened', err)
+    return console.log('something bad happened', err);
   }
-  console.log(`Magic is happening on ${process.env.PORT}`)
+  console.log(`Magic is happening on ${process.env.PORT}`);
 });
 
 //LOCAL CONNECTION
@@ -50,20 +52,24 @@ app.listen(process.env.PORT || 5000, function(err) {
 //   }
 // });
 
-mongoose.connect(process.env.MONGODB_URI, function(error){
- useMongoClient: true; 
-	if (error) console.error(error);
-	else console.log('mongoose connected');
+mongoose.connect(process.env.MONGODB_URI, {
+	useMongoClient: true
+	}, function(error){
+		if (error) console.error(error);
+		else console.log('mongoose connected');
 });
 
 //=====================================================
 
 
 //MongoDB schema for IN PROGRESS todos
-Schema = new mongoose.Schema({
+var Schema = new mongoose.Schema({
 	description: String,
 	due_date: String,
-	status: String,
+	completed: {
+		type: Boolean,
+		default: false
+	},
 	name: String
     },{ collection: 'todo' });
 
@@ -78,7 +84,7 @@ app.get('/todo-app', function(request, response) {
 	Todo.find({}, function(err,todo){
 		console.log('were here');
 		if(err){
-			console.log('ERROR:',err)
+			console.log('ERROR:',err);
 		}else{
 			console.log('SUCCESS:',todo);
 		}
@@ -93,8 +99,8 @@ console.log('this route is being hit');
     Todo.find({}, function(err, todo){
         console.log('we are here');
         if(err){
-            console.log('ERROR:',err)
-        }else{
+            console.log('ERROR:',err);
+        } else{
             response.send(todo);
         }
     });
@@ -106,7 +112,7 @@ app.post('/post-newTodos', function(request, response){
 	console.log('post route hit');
 	console.log(request.body);
 	var todo = new Todo(request.body);
-		console.log("newTodos here!",todo);
+	console.log("newTodos here!",todo);
 
 	todo.save(function (err,todo){
 		if(err){
@@ -119,17 +125,40 @@ app.post('/post-newTodos', function(request, response){
 });
 
 //EDIT POST
- app.post('/post-editTodos', function(req,res){
 
-	 	Todo.findOne(req.body, function(err, todo){
+app.post('/post-editTodos', function(req, res) {
+	return res.status(400).json({
+			status: "error",
+			message: "please specifiy an object id"
+	});
+});
 
-			todo.status = 'complete';
+ app.post('/post-editTodos/:id', function(req,res){
+ 		// adding type-checking will prevent crashing the server
+		if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+			return res.status(400).json({
+				status: "error",
+				message: "please specifiy an object id"
+			});
+		}
+		
+	 	Todo.findById(req.params.id, function(err, todo) {
+	 		// also, we must ensure the client is supplying a valid id, and that the mongo server is behaving properly
+	 		// (otherwise node will crash)
+			if (err || !todo) {
+				return res.status(500).json({
+					status: "error",
+					message: "no todo found with id " + req.params.id
+				});
+			}
+			
+			todo.completed = true;
 				todo.save(function (err, response){
 					if(err){
 				console.log(err);
 					}else{
 				console.log('response logged', todo);
-				res.send(todo);
+				res.json(todo);
 				}
 
 			});
@@ -138,16 +167,37 @@ app.post('/post-newTodos', function(request, response){
 
 //DELETE as .post
 app.post('/post-deleteTodos', function(req, res){
-	res.send('delete post request works');
-	console.log(req.body);
+	return res.status(400).json({
+		status: 'error',
+		message: 'please specify a todo id'
+	});
+});
 
-	Todo.findOne({_id:req.body._id}, function(err, todo){
-		console.log('delete todos here!');
-			if(err){console.log('error:', err);}
-			else{console.log('success:', todo);}
+app.post('/post-deleteTodos/:id', function(req, res){
+ 	// adding type-checking will prevent crashing the server
+	if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+		return res.status(400).json({
+			status: "error",
+			message: "please specifiy an object id"
+		});
+	}
+	console.log(req.params.id);
 
-			todo.remove(function(err){
-				if(err){console.log(err)}
+	Todo.findByIdAndRemove(req.params.id, function(err, todo){
+			console.log('delete todos here!');
+	 		// also, we must ensure the client is supplying a valid id, and that the mongo server is behaving properly
+	 		// (otherwise node will crash)
+			if (err || !todo) {
+				return res.status(500).json({
+					status: "error",
+					message: "no todo found with id " + req.params.id
+				});
+			}
+			
+			return res.status(200).json({
+				status: 'success',
+				message: 'todo successfully deleted'
 			});
+
 	});
 });
